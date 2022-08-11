@@ -1,8 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_nodejs_crud_api/api_service.dart';
 import 'package:flutter_nodejs_crud_api/models/product_model.dart';
 import 'package:flutter_nodejs_crud_api/product_item.dart';
+import 'package:snippet_coder_utils/ProgressHUD.dart';
 
 class ProductList extends StatefulWidget {
   const ProductList({Key? key}) : super(key: key);
@@ -13,26 +15,25 @@ class ProductList extends StatefulWidget {
 
 class _ProductListState extends State<ProductList> {
   List<ProductModel> products = List<ProductModel>.empty(growable: true);
+  bool isAPICallProcess = false;
 
   @override
   void initState() {
     super.initState();
 
-    products.add(ProductModel(
-      id: "1",
-      productName: "Red Horse",
-      productImage:
-          "assets/images/noimage.png",
-      productPrice: 500,
-    ));
+    // products.add(ProductModel(
+    //   id: "1",
+    //   productName: "Red Horse",
+    //   productImage: "assets/images/noimage.png",
+    //   productPrice: 500,
+    // ));
 
-    products.add(ProductModel(
-      id: "2",
-      productName: "San Mig",
-      productImage:
-          "assets/images/noimage.png",
-      productPrice: 400,
-    ));
+    // products.add(ProductModel(
+    //   id: "2",
+    //   productName: "San Mig",
+    //   productImage: "assets/images/noimage.png",
+    //   productPrice: 400,
+    // ));
   }
 
   Widget productList(products) {
@@ -67,7 +68,17 @@ class _ProductListState extends State<ProductList> {
                 itemBuilder: (context, index) {
                   return ProductItem(
                     model: products[index],
-                    onDelete: (ProductModel model) {},
+                    onDelete: (ProductModel model) {
+                      print(model.id.toString());
+                      setState(() {
+                        isAPICallProcess = true;
+                      });
+                      APIService.deleteProduct(model.id).then((response) {
+                        setState(() {
+                          isAPICallProcess = false;
+                        });
+                      });
+                    },
                   );
                 },
               )
@@ -86,7 +97,30 @@ class _ProductListState extends State<ProductList> {
         elevation: 0,
       ),
       backgroundColor: Colors.grey[200],
-      body: productList(products),
+      body: ProgressHUD(
+        child: loadProducts(),
+        inAsyncCall: isAPICallProcess,
+        opacity: .3,
+        key: UniqueKey(),
+      ),
+    );
+  }
+
+  Widget loadProducts() {
+    return FutureBuilder(
+      future: APIService.getProducts(),
+      builder: (
+        BuildContext context,
+        AsyncSnapshot<List<ProductModel>?> model,
+      ) {
+        if (model.hasData) {
+          return productList(model.data);
+        }
+
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }

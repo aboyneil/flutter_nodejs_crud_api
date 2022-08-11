@@ -32,9 +32,9 @@ class ProductItem extends StatelessWidget {
           width: 120,
           alignment: Alignment.center,
           margin: const EdgeInsets.all(10),
-          child: Image.asset(
+          child: Image.network(
             (model!.productImage == null || model!.productImage == "")
-                ? "assets/images/redhorse.jpg"
+                ? "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png"
                 : model!.productImage!,
             height: 70,
             fit: BoxFit.scaleDown,
@@ -72,6 +72,7 @@ class ProductItem extends StatelessWidget {
                         Navigator.of(context)
                             .pushNamed('/edit-product', arguments: {
                           "model": model,
+                          // "isEditMode": true,
                         });
                       },
                     ),

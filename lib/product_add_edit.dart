@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_nodejs_crud_api/api_service.dart';
+import 'package:flutter_nodejs_crud_api/config.dart';
 import 'package:flutter_nodejs_crud_api/models/product_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
@@ -53,8 +55,9 @@ class _ProductAddEditState extends State<ProductAddEdit> {
         final Map arguments = ModalRoute.of(context)?.settings.arguments as Map;
 
         productModel = arguments["model"];
-        isEditMode = true;
+
         setState(() {});
+        isEditMode = true;
       }
     });
   }
@@ -131,6 +134,35 @@ class _ProductAddEditState extends State<ProductAddEdit> {
               () {
                 if (validateAndSave()) {
                   //API SERVICE
+
+                  setState(() {
+                    isAPICallProcess = true;
+                  });
+
+                  APIService.saveProduct(
+                          productModel!, isEditMode, isImageSelected)
+                      .then((response) {
+                    setState(() {
+                      isAPICallProcess = false;
+                    });
+                    if (response) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        "/",
+                        (route) => false,
+                      );
+                    } else {
+                      FormHelper.showSimpleAlertDialog(
+                        context,
+                        Config.appName,
+                        "Error Occured",
+                        "Ok",
+                        () {
+                          Navigator.of(context).pop();
+                        },
+                      );
+                    }
+                  });
                 }
               },
               btnColor: HexColor("#283B71"),
@@ -153,7 +185,10 @@ class _ProductAddEditState extends State<ProductAddEdit> {
   }
 
   static Widget picPicker(
-      bool isFileSelected, String fileName, Function onFilePicked) {
+    bool isFileSelected,
+    String fileName,
+    Function onFilePicked,
+  ) {
     Future<XFile?> _imageFile;
     ImagePicker _picker = ImagePicker();
 
@@ -167,7 +202,7 @@ class _ProductAddEditState extends State<ProductAddEdit> {
                     width: 200,
                   )
                 : SizedBox(
-                    child: Image.asset(
+                    child: Image.network(
                       fileName,
                       width: 200,
                       height: 200,
@@ -175,8 +210,8 @@ class _ProductAddEditState extends State<ProductAddEdit> {
                     ),
                   )
             : SizedBox(
-                child: Image.asset(
-                  "assets/images/noimage.png",
+                child: Image.network(
+                  "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png",
                   width: 200,
                   height: 200,
                   fit: BoxFit.scaleDown,
